@@ -64,3 +64,22 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_79A87DF0E9684C68B3459B0EF4A3014F }}
+  scan-with-dastardly:
+    name: Scan with Dastardly
+    runs-on: ubuntu-latest
+    needs: deploy
+    
+    steps:
+      - name: Run Dastardly Scan
+        continue-on-error: true                        # This allows subsequent steps to run even if this step fails
+        uses: PortSwigger/dastardly-github-action@main
+        with:
+          target-url: 'https://teest-web.azurewebsites.net/'
+    
+      
+      - name: Publish Test Report
+        if: always()                                    # Forces this step to always run
+        uses: mikepenz/action-junit-report@v3
+        with:
+          report_paths: '**/dastardly-report.xml'       # You need to update this path if you pass in a different output filename to the Dastardly action
+          require_tests: true
